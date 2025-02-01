@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 
 def load_and_preprocess_data(
-    filepath: str, start_token: str = "!", end_token: str = "."
+    filepath: str, start_token: str = "<S>", end_token: str = "<E>"
 ) -> List[Tuple[str, str]]:
     """
     Load text from a file and preprocess them into bigrams with specified start and end tokens.
@@ -14,7 +14,6 @@ def load_and_preprocess_data(
     (typically two numbers), all separated by spaces. It processes each word by adding specified
     start and end tokens, then creates bigrams for each processed word. Remember transform the
     letters to lowercase.
-
     Note: It is expected that each line in the file contains a word followed by two numerical
     data elements, all separated by spaces. The last two elements shall be ignored.
 
@@ -26,12 +25,15 @@ def load_and_preprocess_data(
     Returns:
         List[Tuple[str, str]]. A list of bigrams, where each bigram is a tuple of two characters.
     """
+    bigrams: List[Tuple[str, str]] = []
     with open(filepath, "r") as file:
         lines: List[str] = file.read().splitlines()
-
-    # TODO
-    bigrams: List[Tuple[str, str]] = None
-
+    for line in lines:
+        parts = line.strip().split()
+        word = parts[0].lower()
+        processed_word = start_token + word + end_token
+        word_bigram = [(processed_word[i], processed_word[i + 1]) for i in range(len(processed_word) - 1)]
+        bigrams.extend(word_bigram)
     return bigrams
 
 
@@ -48,9 +50,15 @@ def char_to_index(alphabet: str, start_token: str, end_token: str) -> Dict[str, 
         Dict[str, int]: A dictionary mapping each character, including start and end tokens, to an index.
     """
     # Create a dictionary with start token at the beginning and end token at the end
-    # TODO
-    char_to_idx: Dict[str, int] = None
-
+    char_to_idx: Dict[str, int] = {}
+    index = 0
+    char_to_idx[start_token] = index
+    index +=1
+    for letter in alphabet:
+        if letter.lower() not in char_to_idx.keys():  
+            char_to_idx[letter.lower()] = index
+            index +=1
+    char_to_idx[end_token] = index
     return char_to_idx
 
 
@@ -65,8 +73,9 @@ def index_to_char(char_to_index: Dict[str, int]) -> Dict[int, str]:
         Dict[int, str]: A dictionary mapping each index back to its corresponding character.
     """
     # Reverse the char_to_index mapping
-    # TODO
-    idx_to_char: Dict[int, str] = None
+    idx_to_char: Dict[int, str] = {}
+    for letter in char_to_index.keys():
+        idx_to_char[char_to_index[letter]] = letter
 
     return idx_to_char
 
@@ -92,11 +101,15 @@ def count_bigrams(
     """
 
     # Initialize a 2D tensor for counting bigrams
-    # TODO
-    bigram_counts: torch.Tensor = None
-
+    bigram_counts: torch.Tensor = torch.zeros([len(char_to_idx),len(char_to_idx)],dtype= torch.int16)
+    
+    
     # Iterate over each bigram and update the count in the tensor
-    # TODO
+    for char1, char2 in bigrams:
+        if char1 in char_to_idx and char2 in char_to_idx:
+            i,j = char_to_idx[char1], char_to_idx[char2]
+            if 0 <= i < len(char_to_idx) and 0 <= j < len(char_to_idx):
+                bigram_counts[i,j]+=1
 
     return bigram_counts
 
