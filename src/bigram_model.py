@@ -120,12 +120,12 @@ def generate_name(
     generated_name: str = ""
 
     # Iterate to build the name
-    for i in range(max_length):
-        next_char: str = sample_next_character(char_to_idx[current_char], bigram_probabilities, idx_to_char)
-        if next_char != end_token:
-            generated_name += next_char
-            current_char = next_char
-
+    for _ in range(max_length):
+        next_char = sample_next_character(char_to_idx[current_char], bigram_probabilities, idx_to_char)
+        if next_char == end_token:
+            break
+        generated_name += next_char
+        current_char = next_char
     return generated_name
 
 def calculate_log_likelihood(
